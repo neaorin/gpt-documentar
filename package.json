@@ -13,7 +13,9 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.1.1",
+    "@azure/identity": "^4.0.1",
+    "@azure/openai": "^1.0.0-beta.11",
+    "microsoft-cognitiveservices-speech-sdk": "^1.36.0",
     "openai": "^4.23.0"
   }
 }

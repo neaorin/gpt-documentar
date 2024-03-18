@@ -4,45 +4,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sagittarius</title>
+  <title>Viata mea, documentar</title>
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
-  <link rel="stylesheet" type="text/css" href="src/style.css">
-  <script data-goatcounter="https://sagittarius.goatcounter.com/count"
-          async src="//gc.zgo.at/count.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      color: #4a47a3;
+    }
+
+    #container {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px;
+    }
+
+    .panel {
+      flex: 1;
+      margin: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #startButton {
+      padding: 15px 30px;
+      font-size: 20px;
+      background-color: #4a47a3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto;
+    }
+
+    #startButton:hover {
+      background-color: #5c5cbf;
+    }
+
+    #promptOutput {
+      font-size: 22px;
+      overflow-y: auto;
+    }
+
+    video, canvas {
+      max-width: 100%;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 
 <body>
+  <div><h1>Viața mea, documentar</h1></div>
   <div id="container">
-
-    <div class="switch-container">
-      <span class="label label-left"><img src="assets/OpenAI-GPT-4.png" id="gptLogo" /></span>
-      <div class="toggle-switch"><div class="toggle-slider" data-position="left"></div></div>
-      <span class="label label-right"><img src="assets/Google-Gemini-AI-Logo.png" id="geminiLogo" /></span>
+    <div class="panel">
+      <video autoplay playsinline webkit-playsinline muted hidden></video>
+      <canvas id="canvas" width="640" height="480"></canvas>
     </div>
-
-    <div class="api-key-container">
-      API Key: <input type="password" id='apiKey' value=''>
+    <div class="panel">
+      <div id="promptOutput"></div>
     </div>
+  </div>
 
-    <video autoplay playsinline webkit-playsinline muted hidden></video>
-
-    <canvas id="canvas" width="640" height="480"></canvas>
-
-    <div id="instruction"><button id="startButton">Start</button>Start speaking and ask the AI what it recognizes, including hand gestures.<br/>
-    Dictation & speech language: <select id='languageSelect'></select>
-    </div>
-
-    <div id="promptOutput"></div>
-
-    <div id="debugImages" style="display:none;"></div>
-
-    <div id="footer">
-      Best experienced using <img src="assets/Google_Chrome_icon.png" id="chromeLogo" /> Google Chrome on desktop<br />
-      Repo: <a href="https://github.com/gregsadetsky/sagittarius" target="blank">github.com/gregsadetsky/sagittarius</a><br />
-      OpenAI Model: <a href="https://platform.openai.com/docs/guides/vision" target="_blank">gpt-4-vision-preview</a><br />
-      Google Gemini Model: <a href="https://ai.google.dev/models/gemini" target="_blank">gemini-pro-vision</a><br />
-    </div>
+  <div id="instruction">
+    <button id="startButton">Start</button>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

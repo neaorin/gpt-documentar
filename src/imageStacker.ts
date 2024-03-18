@@ -11,7 +11,7 @@ export function scaleAndStackImagesAndGetBase64(images: HTMLImageElement[]) {
   canvas.height = height * SCALE_FACTOR * images.length;
 
   images.forEach((image, index) => {
-    context.drawImage(
+    context!.drawImage(
       image,
       0,
       index * height * SCALE_FACTOR,

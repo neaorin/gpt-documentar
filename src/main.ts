@@ -1,47 +1,18 @@
-import { makeOpenAIRequest } from "./openai";
-import { startDictation, stopDictation, restartDictation } from "./dictation";
+import { OpenAI } from "./openai";
 import { startCamera, stopCamera } from "./camera";
 import { scaleAndStackImagesAndGetBase64 } from "./imageStacker";
-import { makeGeminiRequest } from "./gemini";
 import { Speech } from "./speech";
-import { buildLanguageSelect } from "./dictationLanguages";
 
-const IMAGE_STACK_SIZE = 3;
+const IMAGE_STACK_SIZE = 1;
 
-let isDictating = false;
+let isRunning = false;
 let imageStack: HTMLImageElement[] = [];
 let imageStackInterval: number | null = null;
 
-let unsentMessages: string[] = [];
-let openAiCallInTransit = false;
 let newMessagesWatcherInterval: number | null = null;
 let speech: Speech = new Speech();
+let openAI = new OpenAI();
 
-export function getChosenLanguage() {
-  return document.querySelector("#languageSelect")!.value;
-}
-
-function getSliderAIValue() {
-  return document
-    .querySelector(".toggle-slider")
-    ?.getAttribute("data-position") === "left"
-    ? "openai"
-    : "gemini";
-}
-
-function getApiKey() {
-  const providedApiKey = document.querySelector(
-    "input[type='password']#apiKey"
-  )!.value;
-
-  if (providedApiKey) {
-    return providedApiKey;
-  }
-
-  return getSliderAIValue() === "openai"
-    ? import.meta.env.VITE_OPENAI_KEY
-    : import.meta.env.VITE_GEMINI_KEY;
-}
 
 function pushNewImageOnStack() {
   const canvas = document.querySelector("canvas")! as HTMLCanvasElement;
@@ -55,28 +26,21 @@ function pushNewImageOnStack() {
   }
 }
 
-function dictationEventHandler(message?: string) {
-  if (message) {
-    unsentMessages.push(message);
-    updatePromptOutput(message);
-  }
+async function runLoop() {
+  
+  if (openAI.isRunning() || speech.isSpeaking())
+    return;
 
-  if (!openAiCallInTransit) {
-    openAiCallInTransit = true;
-    const base64 = scaleAndStackImagesAndGetBase64(imageStack);
-    const textPrompt = unsentMessages.join(" ");
-    unsentMessages = [];
+  const base64 = scaleAndStackImagesAndGetBase64(imageStack);
 
-    let aiFunction = null;
-    aiFunction =
-      getSliderAIValue() === "openai" ? makeOpenAIRequest : makeGeminiRequest;
+  const message = await openAI.makeOpenAIRequest(base64);
 
-    aiFunction(textPrompt, base64, getApiKey(), speech).then(() => {
-      // after speech
-      restartDictation();
-      openAiCallInTransit = false;
-    });
-  }
+  if (!message)
+    return;
+
+  await speech.speak(message)
+
+  updatePromptOutput("");
 }
 
 export function updatePromptOutput(
@@ -88,47 +52,34 @@ export function updatePromptOutput(
     return;
   }
 
-  promptOutput.innerHTML += newMessage + (dontAddNewLine ? "" : "<br>");
+  promptOutput.innerHTML += newMessage + (dontAddNewLine ? "" : "<br/><br/>");
   promptOutput.scrollTop = promptOutput.scrollHeight; // Auto-scroll to bottom
 }
 
-// after AI call in transit is done, if we have
-// some messages in the unsent queue, we should make another openai call.
-function newMessagesWatcher() {
-  if (!openAiCallInTransit && unsentMessages.length > 0) {
-    dictationEventHandler();
-  }
-}
 
 document.addEventListener("DOMContentLoaded", async function () {
-  buildLanguageSelect();
 
   document
     .querySelector("#startButton")!
     .addEventListener("click", function () {
-      if (!isDictating && !getApiKey()) {
-        alert("Please enter an API key.");
-        return;
-      }
 
-      isDictating = !isDictating;
+      isRunning = !isRunning;
 
-      if (isDictating) {
+      if (isRunning) {
         startCamera();
-        startDictation(getChosenLanguage(), dictationEventHandler);
 
         imageStackInterval = window.setInterval(() => {
           pushNewImageOnStack();
         }, 800);
 
         newMessagesWatcherInterval = window.setInterval(() => {
-          newMessagesWatcher();
-        }, 100);
+          runLoop();
+        }, 2000);
 
         document.querySelector("#startButton")!.textContent = "Stop";
       } else {
         stopCamera();
-        stopDictation();
+        speech.stop();
 
         imageStackInterval && clearInterval(imageStackInterval);
         newMessagesWatcherInterval && clearInterval(newMessagesWatcherInterval);
@@ -136,15 +87,4 @@ document.addEventListener("DOMContentLoaded", async function () {
         document.querySelector("#startButton")!.textContent = "Start";
       }
     });
-});
-
-document.querySelector(".toggle-switch").addEventListener("click", function () {
-  var slider = document.querySelector(".toggle-slider");
-  if (slider.getAttribute("data-position") === "right") {
-    slider.style.left = "0px";
-    slider.setAttribute("data-position", "left");
-  } else {
-    slider.style.left = "40px";
-    slider.setAttribute("data-position", "right");
-  }
 });

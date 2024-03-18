@@ -1,67 +1,46 @@
-import { getChosenLanguage } from "./main";
+import * as sdk from "microsoft-cognitiveservices-speech-sdk";
+const subscriptionKey = import.meta.env.VITE_AZURE_SPEECH_KEY;
+const serviceRegion = import.meta.env.VITE_AZURE_SPEECH_REGION;
+
+declare global {
+  var speakingStream: boolean;
+}
 
 export class Speech {
-  foundGoogleVoice: SpeechSynthesisVoice | null = null;
   unspokenStreamWords: string[] = [];
-  speakingStream: boolean = false;
+  speechConfig: sdk.SpeechConfig;
+  synthesizer: sdk.SpeechSynthesizer;
+  player: sdk.SpeakerAudioDestination;
+
 
   constructor() {
-    this.onVoicesChangeHandler = this.onVoicesChangeHandler.bind(this);
-    this.onVoicesChangeHandler();
-    window.speechSynthesis.addEventListener(
-      "voiceschanged",
-      this.onVoicesChangeHandler
-    );
+
+    this.speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+    this.speechConfig.speechSynthesisLanguage = "ro-RO";
+    this.speechConfig.speechSynthesisVoiceName = "ro-RO-AlinaNeural";
   }
 
-  onVoicesChangeHandler() {
-    const foundVoices = window.speechSynthesis
-      .getVoices()
-      .filter((v) => v.name.indexOf("Google US English") !== -1);
+  isSpeaking() {
+    return globalThis.speakingStream;
+  }
 
-    if (foundVoices.length > 0) {
-      // this.foundGoogleVoice = foundVoices[0];
+  async speak(message: string) {
+    this.player = new sdk.SpeakerAudioDestination();
+    this.player.onAudioEnd = s => { globalThis.speakingStream = false; }
+
+    this.synthesizer = new sdk.SpeechSynthesizer(this.speechConfig, sdk.AudioConfig.fromSpeakerOutput(this.player));
+    globalThis.speakingStream = true;
+    this.synthesizer.speakTextAsync(message, (result => {
+      this.synthesizer.close();
+    }));
+  }
+
+  stop() {
+    try {
+      this.player?.close();
     }
-  }
-
-  speak(message: string) {
-    return new Promise<void>((resolve) => {
-      let utterance = new SpeechSynthesisUtterance(message);
-      utterance.lang = getChosenLanguage();
-      if (this.foundGoogleVoice) {
-        utterance.voice = this.foundGoogleVoice;
-      }
-      utterance.onend = () => {
-        resolve();
-      };
-      speechSynthesis.speak(utterance);
-    });
-  }
-
-  startStream() {
-    this.unspokenStreamWords = [];
-  }
-  addToStream(message: string) {
-    this.unspokenStreamWords.push(message);
-    this.speakStream();
-  }
-  speakStream() {
-    if (this.unspokenStreamWords.length === 0) {
-      return;
+    catch (e) {
+      console.error(e);
     }
-    if (this.speakingStream) {
-      return;
-    }
-
-    this.speakingStream = true;
-    const message = this.unspokenStreamWords.join(" ");
-    this.unspokenStreamWords = [];
-    this.speak(message).then(() => {
-      this.speakingStream = false;
-      this.speakStream();
-    });
-  }
-  speakStreamIsDone() {
-    return this.unspokenStreamWords.length === 0 && !this.speakingStream;
   }
 }

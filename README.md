@@ -4,6 +4,11 @@
 
 Have GPT-4 Turbo with Vision narrate your life in the style of [Teleenciclopedia](https://ro.wikipedia.org/wiki/Teleenciclopedia) nature documentaries!
 
+### Demo (click for video) 
+
+[![VIDEO](http://img.youtube.com/vi/E8hKvplGtUE/0.jpg)](http://www.youtube.com/watch?v=E8hKvplGtUE)
+
+
 Code is forked from [https://github.com/gregsadetsky/sagittarius](https://github.com/gregsadetsky/sagittarius)
 
 Idea based on [https://github.com/cbh123/narrator](https://github.com/cbh123/narrator)

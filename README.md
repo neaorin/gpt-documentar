@@ -10,6 +10,7 @@ Idea based on [https://github.com/cbh123/narrator](https://github.com/cbh123/nar
 
 # Prerequisites
 
+- Node.js
 - Microsoft Azure subscription
 - [Microsoft Azure Open AI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource) instance, with a [GPT-4 Turbo with Vision deployment](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/gpt-with-vision)
 - [Microsoft Speech Service](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/overview) instance
